@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import api from './services/api'
+import api, { apiBaseUrl } from './services/api'
 
 const users = ref([])
 const isLoading = ref(true)
@@ -12,10 +12,26 @@ async function loadUsers() {
 
   try {
     const response = await api.get('/api/api/users')
-    users.value = response.data.data
+    users.value = Array.isArray(response?.data?.data) ? response.data.data : []
+
+    if (users.value.length === 0 && response?.data?.message) {
+      errorMessage.value = response.data.message
+    }
   } catch (error) {
-    errorMessage.value =
-      error instanceof Error ? error.message : 'Terjadi kesalahan saat mengambil data.'
+    const status = error?.response?.status
+    const dataMessage = error?.response?.data?.message
+
+    if (status === 404) {
+      errorMessage.value = `Endpoint API tidak ditemukan. Cek URL backend di Vercel: ${apiBaseUrl}`
+    } else if (status === 500) {
+      errorMessage.value = 'Server API mengalami kesalahan.'
+    } else if (dataMessage) {
+      errorMessage.value = dataMessage
+    } else if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = 'Terjadi kesalahan saat mengambil data.'
+    }
   } finally {
     isLoading.value = false
   }
