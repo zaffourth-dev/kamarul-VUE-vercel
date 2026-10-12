@@ -11,12 +11,12 @@ async function loadUsers() {
   errorMessage.value = ''
 
   try {
-    const response = await api.get('/api/api/users')
-    users.value = Array.isArray(response?.data?.data) ? response.data.data : []
-
-    if (users.value.length === 0 && response?.data?.message) {
-      errorMessage.value = response.data.message
+    const response = await api.get('/api/api/users', { timeout: 10000 })
+    if (!Array.isArray(response?.data?.data)) {
+      throw new Error('Format data dari API tidak sesuai.')
     }
+
+    users.value = response.data.data
   } catch (error) {
     const status = error?.response?.status
     const dataMessage = error?.response?.data?.message
@@ -27,6 +27,10 @@ async function loadUsers() {
       errorMessage.value = 'Server API mengalami kesalahan.'
     } else if (dataMessage) {
       errorMessage.value = dataMessage
+    } else if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT') {
+      errorMessage.value = 'Koneksi ke server terlalu lama. Periksa server API lalu coba lagi.'
+    } else if (error?.request) {
+      errorMessage.value = `Tidak dapat terhubung ke API (${apiBaseUrl}). Periksa koneksi atau konfigurasi CORS server.`
     } else if (error instanceof Error) {
       errorMessage.value = error.message
     } else {
@@ -44,10 +48,11 @@ onMounted(loadUsers)
   <main class="container">
     <h1>Daftar Pengguna</h1>
 
-    <p v-if="isLoading">Memuat data...</p>
-    <p v-else-if="errorMessage" class="error">
-      Gagal mengambil data: {{ errorMessage }}
-    </p>
+    <p v-if="isLoading" role="status" aria-live="polite">Memuat data...</p>
+    <div v-else-if="errorMessage" class="error" role="alert">
+      <p>Gagal mengambil data: {{ errorMessage }}</p>
+      <button type="button" @click="loadUsers">Coba lagi</button>
+    </div>
     <p v-else-if="users.length === 0">Data pengguna tidak ditemukan.</p>
 
     <ul v-else class="user-list">
