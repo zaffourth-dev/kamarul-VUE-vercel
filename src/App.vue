@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import api, { apiBaseUrl } from './services/api'
+import api from './services/api'
 
 const users = ref([])
 const isLoading = ref(true)
@@ -11,31 +11,11 @@ async function loadUsers() {
   errorMessage.value = ''
 
   try {
-    const response = await api.get('/api/api/users', { timeout: 10000 })
-    if (!Array.isArray(response?.data?.data)) {
-      throw new Error('Format data dari API tidak sesuai.')
-    }
-
+    const response = await api.get('/api/api/users')
     users.value = response.data.data
   } catch (error) {
-    const status = error?.response?.status
-    const dataMessage = error?.response?.data?.message
-
-    if (status === 404) {
-      errorMessage.value = `Endpoint API tidak ditemukan. Cek URL backend di Vercel: ${apiBaseUrl}`
-    } else if (status === 500) {
-      errorMessage.value = 'Server API mengalami kesalahan.'
-    } else if (dataMessage) {
-      errorMessage.value = dataMessage
-    } else if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT') {
-      errorMessage.value = 'Koneksi ke server terlalu lama. Periksa server API lalu coba lagi.'
-    } else if (error?.request) {
-      errorMessage.value = `Tidak dapat terhubung ke API (${apiBaseUrl}). Periksa koneksi atau konfigurasi CORS server.`
-    } else if (error instanceof Error) {
-      errorMessage.value = error.message
-    } else {
-      errorMessage.value = 'Terjadi kesalahan saat mengambil data.'
-    }
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Terjadi kesalahan saat mengambil data.'
   } finally {
     isLoading.value = false
   }
@@ -48,11 +28,10 @@ onMounted(loadUsers)
   <main class="container">
     <h1>Daftar Pengguna</h1>
 
-    <p v-if="isLoading" role="status" aria-live="polite">Memuat data...</p>
-    <div v-else-if="errorMessage" class="error" role="alert">
-      <p>Gagal mengambil data: {{ errorMessage }}</p>
-      <button type="button" @click="loadUsers">Coba lagi</button>
-    </div>
+    <p v-if="isLoading">Memuat data...</p>
+    <p v-else-if="errorMessage" class="error">
+      Gagal mengambil data: {{ errorMessage }}
+    </p>
     <p v-else-if="users.length === 0">Data pengguna tidak ditemukan.</p>
 
     <ul v-else class="user-list">
