@@ -60,6 +60,10 @@ body {
   margin: 40px auto;
 }
 
+.container h1 {
+  color: #000;
+}
+
 .user-list {
   display: grid;
   gap: 16px;
@@ -71,11 +75,13 @@ body {
   padding: 16px;
   border-radius: 8px;
   background: white;
+  color: #000;
   box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
 .user-card h2 {
   margin-top: 0;
+  color: #000;
   text-transform: capitalize;
 }
 
