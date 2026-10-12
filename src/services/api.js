@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || 'https://15larasupalagi.vercel.app'
+  import.meta.env.VITE_API_BASE_URL || 'https://kamarul-api-vercel.vercel.app'
 
 const api = axios.create({
   baseURL: apiBaseUrl.replace(/\/$/, ''),
